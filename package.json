@@ -1,0 +1,23 @@
+{
+    "name": "classrouter",
+    "version": "1.0.0",
+    "description": "class based typescript route",
+    "main": "build/index.js",
+    "typings": "build/index.d.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "farcek <farcek@gmail.com>",
+    "license": "ISC",
+    "dependencies": {
+        "class-transformer": "^0.1.6",
+        "class-validator": "^0.7.0",
+        "express": "^4.15.2",
+        "reflect-metadata": "^0.1.10"
+    },
+    "devDependencies": {
+        "@types/express": "^4.0.35",
+        "@types/node": "^7.0.10",
+        "typescript": "^2.2.1"
+    }
+}

@@ -1,0 +1,80 @@
+import * as express from 'express'
+import * as classrouter from './index'
+import * as bodyParser from 'body-parser'
+
+
+class FForm {
+    @classrouter.validator.IsString()
+    Aa: string
+}
+
+@classrouter.POST
+@classrouter.PATH('/list/:id')
+@classrouter.before(bodyParser.json)
+class ListClass implements classrouter.IRoute {
+
+
+    @classrouter.PathParam()
+    @classrouter.typecast.str2int()
+    @classrouter.validator.IsInt()
+    private id: number
+
+
+    @classrouter.validator.IsAlpha()
+    @classrouter.BodyParam()
+    name: string
+
+    @classrouter.validator.Min(3)
+    @classrouter.validator.Max(120)
+    @classrouter.BodyParam()
+    age: number
+
+
+    @classrouter.BodyParam()
+    @classrouter.typecast.plain2Class(FForm)
+    @classrouter.validator.ValidateNested()
+    form: FForm;
+
+
+
+    async action() {
+        console.log(this)
+        return {
+            id: this.id,
+            name: this.name,
+            age: this.age,
+            from : this.form
+        }
+    }
+}
+
+
+var app = express();
+
+var router = express.Router();
+
+classrouter.attach(router, ListClass)
+
+app.use('/api', router);
+
+
+
+app.use((err, req, res, next) => {
+    console.log(' ---------------------------------------------------------------------- ');
+    console.log(err)
+    console.log(err.stack);
+
+    if (err instanceof classrouter.ClassrouterValidationError) {
+        res.json({
+            name: "validation error",
+            message: "validation",
+            errors: err.errors
+        });
+
+    } else {
+        next(err);
+    }
+})
+app.listen(3099, () => {
+    console.log("start listen 3099")
+});
