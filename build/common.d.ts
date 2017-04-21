@@ -22,7 +22,7 @@ export interface ITypecastFn {
     (paramValue: IParamValue, paramMeta: ClassRouterParamMeta): any;
 }
 export interface IRoute {
-    action: () => Promise<any>;
+    action: (req, res, next) => Promise<any>;
 }
 export interface IParamOption {
     fieldname?: string;

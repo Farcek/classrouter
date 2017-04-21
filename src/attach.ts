@@ -40,12 +40,12 @@ function resolveParam(req, routerParam: ClassRouterParamMeta) {
 
 export function attach(expressRouter, clss: { new (): IRoute }) {
     let meta = ClassRouterMeta.getOrCreateClassRouterMeta(clss);
-    
+
     let handler = (req, res, next) => {
         let instance = new clss();
 
         //
-        
+
 
         meta.params.each(paramMeta => {
             let paramValue = resolveParam(req, paramMeta);
@@ -66,7 +66,7 @@ export function attach(expressRouter, clss: { new (): IRoute }) {
                 if (errors.length > 0) {
                     throw new ClassrouterValidationError(errors);
                 }
-                return instance.action()
+                return instance.action(req, res, next)
             })
             .then(result => {
                 res.json(result)

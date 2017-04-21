@@ -16,11 +16,11 @@ export class ReflectType {
 }
 
 export interface ITypecastFn {
-    (paramValue: IParamValue, paramMeta: ClassRouterParamMeta ): any
+    (paramValue: IParamValue, paramMeta: ClassRouterParamMeta): any
 }
 
 export interface IRoute {
-    action: () => Promise<any>
+    action: (req, res, next) => Promise<any>
 }
 export interface IParamOption {
 
@@ -43,7 +43,6 @@ export class ClassRouterMeta {
     method: HttpMethod
 
     params: Map<ClassRouterParamMeta>
-
     befores: Function[]
 
     private _paths: string[];
@@ -82,13 +81,15 @@ export class ClassRouterMeta {
         return parammeta;
     }
 
+   
+
 
     static getOrCreateClassRouterMeta(target): ClassRouterMeta {
 
         if (Reflect.hasMetadata(ReflectType.CLASSROUTER, target)) {
             return Reflect.getMetadata(ReflectType.CLASSROUTER, target);
         }
-        
+
         let meta = new ClassRouterMeta(target);
         Reflect.defineMetadata(ReflectType.CLASSROUTER, meta, target);
         return meta;
@@ -105,6 +106,7 @@ export class ClassRouterParamMeta {
 
     typecast: ITypecastFn
 }
+
 
 export class ClassrouterValidationError {
     constructor(public errors) {

@@ -59,7 +59,7 @@ function attach(expressRouter, clss) {
             if (errors.length > 0) {
                 throw new common_1.ClassrouterValidationError(errors);
             }
-            return instance.action();
+            return instance.action(req, res, next);
         })
             .then(function (result) {
             res.json(result);
