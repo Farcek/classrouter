@@ -20,8 +20,9 @@ export interface ITypecastFn {
 }
 
 export interface IRoute {
-    action: (req, res, next) => Promise<any>
+    action: (req:any, res:any, next:any) => Promise<any>
 }
+
 export interface IParamOption {
 
     fieldname?: string
