@@ -1,6 +1,6 @@
 import { ClassRouterMeta, HttpMethod, ParamLocation, ReflectType, IRoute, ClassrouterValidationError, IParamValue, ClassRouterParamMeta } from './common'
 import { validate } from "class-validator";
-
+import * as response from "./response";
 
 
 function resolveParam(req, routerParam: ClassRouterParamMeta) {
@@ -69,7 +69,13 @@ export function attach(expressRouter, clss: { new (): IRoute }) {
                 return instance.action(req, res, next)
             })
             .then(result => {
-                res.json(result)
+                if (result instanceof response.View) {
+                    res.render(result.name, result.data);
+                } else if (meta.viewName) {
+                    res.render(meta.viewName, result);
+                } else {
+                    res.json(result)
+                }
             })
             .catch(err => {
                 next(err)

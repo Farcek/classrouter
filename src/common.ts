@@ -4,6 +4,10 @@ export enum HttpMethod {
     GET = 1, POST, PUT, DELETE
 }
 
+// export enum ContentType {
+//     JSON = 1, HTML
+// }
+
 export enum ParamLocation {
     Query, Path, Body, Header, Cookie
 }
@@ -20,7 +24,7 @@ export interface ITypecastFn {
 }
 
 export interface IRoute {
-    action: (req:any, res:any, next:any) => Promise<any>
+    action: (req: any, res: any, next: any) => Promise<any>
 }
 
 export interface IParamOption {
@@ -42,6 +46,7 @@ export class ClassRouterMeta {
 
     name: string
     method: HttpMethod
+    viewName: string
 
     params: Map<ClassRouterParamMeta>
     befores: Function[]
@@ -82,7 +87,7 @@ export class ClassRouterMeta {
         return parammeta;
     }
 
-   
+
 
 
     static getOrCreateClassRouterMeta(target): ClassRouterMeta {
@@ -176,10 +181,6 @@ export function PromiseAll<T, U>(arr: T[], iteratorFn: (item: T, index: number) 
     let promises = arr.map((it, index) => iteratorFn(it, index));
     return Promise.all(promises)
 }
-
-
-
-
 
 
 

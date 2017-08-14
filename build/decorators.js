@@ -33,6 +33,13 @@ function before() {
     };
 }
 exports.before = before;
+function view(name) {
+    return function (target) {
+        var meta = common_1.ClassRouterMeta.getOrCreateClassRouterMeta(target);
+        meta.viewName = name;
+    };
+}
+exports.view = view;
 function PATH() {
     var paths = [];
     for (var _i = 0; _i < arguments.length; _i++) {

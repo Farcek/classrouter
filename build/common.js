@@ -8,6 +8,9 @@ var HttpMethod;
     HttpMethod[HttpMethod["PUT"] = 3] = "PUT";
     HttpMethod[HttpMethod["DELETE"] = 4] = "DELETE";
 })(HttpMethod = exports.HttpMethod || (exports.HttpMethod = {}));
+// export enum ContentType {
+//     JSON = 1, HTML
+// }
 var ParamLocation;
 (function (ParamLocation) {
     ParamLocation[ParamLocation["Query"] = 0] = "Query";

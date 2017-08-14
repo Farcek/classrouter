@@ -38,6 +38,7 @@ export declare class ClassRouterMeta {
     target: any;
     name: string;
     method: HttpMethod;
+    viewName: string;
     params: Map<ClassRouterParamMeta>;
     befores: Function[];
     private _paths;

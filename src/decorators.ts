@@ -6,7 +6,7 @@ function initMethod(target: Function, method: HttpMethod) {
     meta.method = method;
 }
 export function GET(target: Function) {
-    initMethod(target, HttpMethod.GET);    
+    initMethod(target, HttpMethod.GET);
 }
 export function POST(target: Function) {
     initMethod(target, HttpMethod.POST);
@@ -24,6 +24,13 @@ export function before(...middlewares: Function[]) {
     return (target: Function) => {
         let meta = ClassRouterMeta.getOrCreateClassRouterMeta(target);
         middlewares.forEach(it => meta.befores.push(it));
+    }
+}
+
+export function view(name: string) {
+    return (target: Function) => {
+        let meta = ClassRouterMeta.getOrCreateClassRouterMeta(target);
+        meta.viewName = name;
     }
 }
 
