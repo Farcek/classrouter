@@ -4,3 +4,8 @@ export class View{
     }
 }
 
+export class Redirect{
+    constructor(public uri:string, public code = 301){
+
+    }
+}

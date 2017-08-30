@@ -66,6 +66,9 @@ function attach(expressRouter, clss) {
             if (result instanceof response.View) {
                 res.render(result.name, result.data);
             }
+            else if (result instanceof response.Redirect) {
+                res.redirect(result.code, result.uri);
+            }
             else if (meta.viewName) {
                 res.render(meta.viewName, result);
             }
