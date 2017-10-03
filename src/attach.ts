@@ -1,6 +1,7 @@
-import { ClassRouterMeta, HttpMethod, ParamLocation, ReflectType, IRoute, ClassrouterValidationError, IParamValue, ClassRouterParamMeta } from './common'
+import { ClassRouterMeta, HttpMethod, ParamLocation, ReflectType, ClassType, IRoute, ClassrouterValidationError, IParamValue, ClassRouterParamMeta } from './common'
 import { validate } from "class-validator";
 import * as response from "./response";
+import * as express from "express";
 
 
 function resolveParam(req, routerParam: ClassRouterParamMeta) {
@@ -38,9 +39,41 @@ function resolveParam(req, routerParam: ClassRouterParamMeta) {
     return paramValue;
 }
 
-export function attach(expressRouter, clss: { new (): IRoute }) {
-    let meta = ClassRouterMeta.getOrCreateClassRouterMeta(clss);
+export function attach(expressRouter: any, clss: { new (): IRoute | any }, parent?: string) {
+    let meta = ClassRouterMeta.getOrCreateClassRouterMeta(clss);    
+    let p = `${parent || ''}.${meta.name}`;
+    if (meta.subRouters && meta.subRouters.length) {
+        attachUse(meta, expressRouter, <{ new (): any }>clss, p);
+    } else {
+        attachRoute(meta, expressRouter, <{ new (): IRoute }>clss, p);
+    }
 
+    return expressRouter;
+}
+
+function attachUse(meta: ClassRouterMeta, expressRouter: any, clss: { new (): any }, parent?: string) {
+
+    var router = express.Router();
+
+    meta.subRouters.map(route => {
+        attach(router, route, parent)
+    });
+
+
+    let befores = meta.befores.map(fn => {
+        return fn();
+    });
+
+    let handlers = [].concat(befores, [router]);
+
+    let jo = (path) => {
+        expressRouter.use(path, handlers);
+    };
+
+    meta.getPaths().map(jo);
+}
+
+function attachRoute(meta: ClassRouterMeta, expressRouter: any, clss: { new (): IRoute }, parent?: string) {
     let handler = (req, res, next) => {
         let instance = new clss();
 
@@ -72,7 +105,7 @@ export function attach(expressRouter, clss: { new (): IRoute }) {
                 if (result instanceof response.View) {
                     res.render(result.name, result.data);
                 } else if (result instanceof response.Redirect) {
-                    res.redirect(result.code, result.uri );
+                    res.redirect(result.code, result.uri);
                 } else if (meta.viewName) {
                     res.render(meta.viewName, result);
                 } else {
@@ -100,10 +133,11 @@ export function attach(expressRouter, clss: { new (): IRoute }) {
         } else if (meta.method === HttpMethod.DELETE) {
             expressRouter.delete(path, handlers);
         } else {
+            console.log('meta', meta)
             throw new Error("Not supported HttpMethod");
         }
 
-        console.log("attaching", path, HttpMethod[meta.method])
+        console.log("attaching: ", parent, path, HttpMethod[meta.method])
     };
 
     meta.getPaths().map(jo);

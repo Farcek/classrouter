@@ -41,6 +41,7 @@ export declare class ClassRouterMeta {
     viewName: string;
     params: Map<ClassRouterParamMeta>;
     befores: Function[];
+    subRouters: ClassType<IRoute>[];
     private _paths;
     constructor(target: any);
     addPath(path: string): this;

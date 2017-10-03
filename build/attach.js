@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var common_1 = require("./common");
 var class_validator_1 = require("class-validator");
 var response = require("./response");
+var express = require("express");
 function resolveParam(req, routerParam) {
     var paramValue = { exists: false };
     if (routerParam.where === common_1.ParamLocation.Query) {
@@ -38,8 +39,33 @@ function resolveParam(req, routerParam) {
     }
     return paramValue;
 }
-function attach(expressRouter, clss) {
+function attach(expressRouter, clss, parent) {
     var meta = common_1.ClassRouterMeta.getOrCreateClassRouterMeta(clss);
+    var p = (parent || '') + "." + meta.name;
+    if (meta.subRouters && meta.subRouters.length) {
+        attachUse(meta, expressRouter, clss, p);
+    }
+    else {
+        attachRoute(meta, expressRouter, clss, p);
+    }
+    return expressRouter;
+}
+exports.attach = attach;
+function attachUse(meta, expressRouter, clss, parent) {
+    var router = express.Router();
+    meta.subRouters.map(function (route) {
+        attach(router, route, parent);
+    });
+    var befores = meta.befores.map(function (fn) {
+        return fn();
+    });
+    var handlers = [].concat(befores, [router]);
+    var jo = function (path) {
+        expressRouter.use(path, handlers);
+    };
+    meta.getPaths().map(jo);
+}
+function attachRoute(meta, expressRouter, clss, parent) {
     var handler = function (req, res, next) {
         var instance = new clss();
         //
@@ -98,11 +124,11 @@ function attach(expressRouter, clss) {
             expressRouter.delete(path, handlers);
         }
         else {
+            console.log('meta', meta);
             throw new Error("Not supported HttpMethod");
         }
-        console.log("attaching", path, common_1.HttpMethod[meta.method]);
+        console.log("attaching: ", parent, path, common_1.HttpMethod[meta.method]);
     };
     meta.getPaths().map(jo);
 }
-exports.attach = attach;
 //# sourceMappingURL=attach.js.map

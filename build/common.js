@@ -32,9 +32,10 @@ exports.ReflectType = ReflectType;
 var ClassRouterMeta = (function () {
     function ClassRouterMeta(target) {
         this.target = target;
+        this.befores = [];
+        this.subRouters = [];
         this._paths = [];
         this.params = new Map();
-        this.befores = [];
     }
     ClassRouterMeta.prototype.addPath = function (path) {
         this._paths.push(path);
@@ -59,6 +60,7 @@ var ClassRouterMeta = (function () {
             return Reflect.getMetadata(ReflectType.CLASSROUTER, target);
         }
         var meta = new ClassRouterMeta(target);
+        meta.name = target.name;
         Reflect.defineMetadata(ReflectType.CLASSROUTER, meta, target);
         return meta;
     };

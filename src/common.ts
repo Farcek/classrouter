@@ -42,6 +42,7 @@ export declare type ClassType<T> = {
     new (...args: any[]): T;
 };
 
+
 export class ClassRouterMeta {
 
     name: string
@@ -49,17 +50,16 @@ export class ClassRouterMeta {
     viewName: string
 
     params: Map<ClassRouterParamMeta>
-    befores: Function[]
+    befores: Function[] = []
+    subRouters: ClassType<IRoute>[] = []
 
-    private _paths: string[];
+    private _paths: string[] = [];
 
 
 
 
-    constructor(public target) {
-        this._paths = [];
-        this.params = new Map<ClassRouterParamMeta>()
-        this.befores = [];
+    constructor(public target) {        
+        this.params = new Map<ClassRouterParamMeta>()        
     }
 
 
@@ -97,6 +97,7 @@ export class ClassRouterMeta {
         }
 
         let meta = new ClassRouterMeta(target);
+        meta.name = target.name;
         Reflect.defineMetadata(ReflectType.CLASSROUTER, meta, target);
         return meta;
     }

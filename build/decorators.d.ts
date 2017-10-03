@@ -1,3 +1,4 @@
+import { ClassType } from './common';
 export declare function GET(target: Function): void;
 export declare function POST(target: Function): void;
 export declare function PUT(target: Function): void;
@@ -10,3 +11,4 @@ export declare function PathParam(fieldname?: string): (target: any, propertyKey
 export declare function BodyParam(fieldname?: string): (target: any, propertyKey: string) => void;
 export declare function CookieParam(fieldname?: string): (target: any, propertyKey: string) => void;
 export declare function HeaderParam(fieldname?: string): (target: any, propertyKey: string) => void;
+export declare function SubRouter(...subRouters: ClassType<any>[]): (target: Function) => void;

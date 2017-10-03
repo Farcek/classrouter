@@ -6,9 +6,8 @@ import *  as classrouter from 'classrouter';
 import { IModels } from 'eggly2-core';
 
 
-
 @classrouter.GET
-export class list implements classrouter.IRoute {
+export class userList implements classrouter.IRoute {
     @classrouter.QueryParam()
     @classrouter.typecast.str2int()
     page: number = 1
@@ -35,6 +34,10 @@ export class list implements classrouter.IRoute {
         }
     }
 }
+
+
+@classrouter.SubRouter( userList )
+export class user {}
 ```
 
 
@@ -47,7 +50,9 @@ import {list} from "./list";
 
 export const router = express.Router();
 
-attach(router,list);
+const app = express();
+
+app.use('/api',attach(router,user, 'Api')) ;
 
 ```
 

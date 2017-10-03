@@ -1,8 +1,8 @@
-import { ClassRouterMeta, HttpMethod, ParamLocation, ReflectType } from './common'
+import { ClassRouterMeta, HttpMethod, ParamLocation, ReflectType, ClassType, IRoute } from './common'
 
 function initMethod(target: Function, method: HttpMethod) {
     let meta = ClassRouterMeta.getOrCreateClassRouterMeta(target);
-    meta.name = target.name;
+    
     meta.method = method;
 }
 export function GET(target: Function) {
@@ -33,6 +33,8 @@ export function view(name: string) {
         meta.viewName = name;
     }
 }
+
+
 
 export function PATH(...paths: string[]) {
     return (target) => {
@@ -66,4 +68,11 @@ export function CookieParam(fieldname?: string) {
 }
 export function HeaderParam(fieldname?: string) {
     return (target, propertyKey: string) => initParam(target, propertyKey, fieldname, ParamLocation.Header)
+}
+
+export function SubRouter(...subRouters: ClassType<any>[]) {
+    return (target: Function) => {
+        let meta = ClassRouterMeta.getOrCreateClassRouterMeta(target);
+        meta.subRouters = subRouters;
+    }
 }

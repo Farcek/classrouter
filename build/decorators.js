@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var common_1 = require("./common");
 function initMethod(target, method) {
     var meta = common_1.ClassRouterMeta.getOrCreateClassRouterMeta(target);
-    meta.name = target.name;
     meta.method = method;
 }
 function GET(target) {
@@ -82,4 +81,15 @@ function HeaderParam(fieldname) {
     return function (target, propertyKey) { return initParam(target, propertyKey, fieldname, common_1.ParamLocation.Header); };
 }
 exports.HeaderParam = HeaderParam;
+function SubRouter() {
+    var subRouters = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        subRouters[_i] = arguments[_i];
+    }
+    return function (target) {
+        var meta = common_1.ClassRouterMeta.getOrCreateClassRouterMeta(target);
+        meta.subRouters = subRouters;
+    };
+}
+exports.SubRouter = SubRouter;
 //# sourceMappingURL=decorators.js.map
