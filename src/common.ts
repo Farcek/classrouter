@@ -9,7 +9,7 @@ export enum HttpMethod {
 // }
 
 export enum ParamLocation {
-    Query, Path, Body, Header, Cookie
+    Query, Path, Body, Header, Cookie, Request
 }
 
 export class ReflectType {
@@ -43,14 +43,21 @@ export declare type ClassType<T> = {
 };
 
 
+
+
+
 export class ClassRouterMeta {
 
     name: string
     method: HttpMethod
     viewName: string
+    validationClass: IValidationErrorClass
 
     params: Map<ClassRouterParamMeta>
     befores: Function[] = []
+
+    middlewares: ClassRouterMiddlewareMeta[] = []
+
     subRouters: ClassType<IRoute>[] = []
 
     private _paths: string[] = [];
@@ -58,8 +65,8 @@ export class ClassRouterMeta {
 
 
 
-    constructor(public target) {        
-        this.params = new Map<ClassRouterParamMeta>()        
+    constructor(public target) {
+        this.params = new Map<ClassRouterParamMeta>()
     }
 
 
@@ -114,13 +121,36 @@ export class ClassRouterParamMeta {
     typecast: ITypecastFn
 }
 
+export class ClassRouterMiddlewareMeta {
+    constructor(
+        public methodName: string,
+        public attachName: string) {
+
+    }
+
+}
 
 export class ClassrouterValidationError {
-    constructor(public errors) {
+    constructor(public errors: IValidationResult[]) {
 
     }
 }
 
+
+
+export interface IValidationResult {
+    target: Object; // Object that was validated.
+    property: string; // Object's property that haven't pass validation.
+    value: any; // Value that haven't pass a validation.
+    constraints?: { // Constraints that failed validation with error messages.
+        [type: string]: string;
+    };
+    children?: IValidationResult[]; // Contains all nested validation errors of the property
+}
+
+export interface IValidationErrorClass {
+    new (errors: IValidationResult[]): void;
+};
 
 export class Map<T> {
     private _size: number;

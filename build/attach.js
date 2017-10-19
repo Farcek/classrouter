@@ -37,6 +37,12 @@ function resolveParam(req, routerParam) {
             paramValue.value = req.cookies[routerParam.fieldname];
         }
     }
+    else if (routerParam.where === common_1.ParamLocation.Request) {
+        if (routerParam.fieldname in req) {
+            paramValue.exists = true;
+            paramValue.value = req[routerParam.fieldname];
+        }
+    }
     return paramValue;
 }
 function attach(expressRouter, clss, parent) {
@@ -51,15 +57,58 @@ function attach(expressRouter, clss, parent) {
     return expressRouter;
 }
 exports.attach = attach;
+function buildInstance(meta, clss, req) {
+    var instance = new clss();
+    meta.params.each(function (paramMeta) {
+        var paramValue = resolveParam(req, paramMeta);
+        if (paramValue.exists) {
+            if (paramMeta.typecast) {
+                instance[paramMeta.propertyname] = paramMeta.typecast(paramValue, paramMeta);
+            }
+            else {
+                instance[paramMeta.propertyname] = paramValue.value;
+            }
+        }
+    });
+    return class_validator_1.validate(instance)
+        .then(function (errors) {
+        if (errors.length > 0) {
+            if (meta.validationClass) {
+                throw new meta.validationClass(errors);
+            }
+            throw new common_1.ClassrouterValidationError(errors);
+        }
+        return instance;
+    });
+}
 function attachUse(meta, expressRouter, clss, parent) {
-    var router = express.Router();
+    var router = express.Router({});
     meta.subRouters.map(function (route) {
         attach(router, route, parent);
     });
     var befores = meta.befores.map(function (fn) {
         return fn();
     });
-    var handlers = [].concat(befores, [router]);
+    var middlewares = meta.middlewares.map(function (it) {
+        return function (req, res, next) {
+            buildInstance(meta, clss, req)
+                .then(function (instance) {
+                if (it.methodName in instance) {
+                    var fn = instance[it.methodName];
+                    var result = fn.call(instance, req, res);
+                    return Promise.resolve(result)
+                        .then(function (r) {
+                        req[it.attachName] = r;
+                        next();
+                    })
+                        .catch(function (err) { return next(err); });
+                }
+                throw "not found method. method name : " + clss.name + "." + it.methodName + ".   ";
+            })
+                .catch(function (err) { return next(err); });
+        };
+    });
+    var handlers = befores.concat(middlewares, [router]);
     var jo = function (path) {
         expressRouter.use(path, handlers);
     };
@@ -67,25 +116,8 @@ function attachUse(meta, expressRouter, clss, parent) {
 }
 function attachRoute(meta, expressRouter, clss, parent) {
     var handler = function (req, res, next) {
-        var instance = new clss();
-        //
-        meta.params.each(function (paramMeta) {
-            var paramValue = resolveParam(req, paramMeta);
-            if (paramValue.exists) {
-                //console.log(paramMeta.propertyname, paramValue)
-                if (paramMeta.typecast) {
-                    instance[paramMeta.propertyname] = paramMeta.typecast(paramValue, paramMeta);
-                }
-                else {
-                    instance[paramMeta.propertyname] = paramValue.value;
-                }
-            }
-        });
-        class_validator_1.validate(instance)
-            .then(function (errors) {
-            if (errors.length > 0) {
-                throw new common_1.ClassrouterValidationError(errors);
-            }
+        buildInstance(meta, clss, req)
+            .then(function (instance) {
             return instance.action(req, res, next);
         })
             .then(function (result) {
@@ -109,7 +141,26 @@ function attachRoute(meta, expressRouter, clss, parent) {
     var befores = meta.befores.map(function (fn) {
         return fn();
     });
-    var handlers = [].concat(befores, [handler]);
+    var middlewares = meta.middlewares.map(function (it) {
+        return function (req, res, next) {
+            buildInstance(meta, clss, req)
+                .then(function (instance) {
+                if (it.methodName in instance) {
+                    var fn = instance[it.methodName];
+                    var result = fn.call(instance, req, res);
+                    return Promise.resolve(result)
+                        .then(function (r) {
+                        req[it.attachName] = r;
+                        next();
+                    })
+                        .catch(function (err) { return next(err); });
+                }
+                throw "not found method. method name : " + clss.name + "." + it.methodName + ".   ";
+            })
+                .catch(function (err) { return next(err); });
+        };
+    });
+    var handlers = befores.concat(middlewares, [handler]);
     var jo = function (path) {
         if (meta.method === common_1.HttpMethod.GET) {
             expressRouter.get(path, handlers);

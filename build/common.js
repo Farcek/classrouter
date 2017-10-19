@@ -18,6 +18,7 @@ var ParamLocation;
     ParamLocation[ParamLocation["Body"] = 2] = "Body";
     ParamLocation[ParamLocation["Header"] = 3] = "Header";
     ParamLocation[ParamLocation["Cookie"] = 4] = "Cookie";
+    ParamLocation[ParamLocation["Request"] = 5] = "Request";
 })(ParamLocation = exports.ParamLocation || (exports.ParamLocation = {}));
 var ReflectType = (function () {
     function ReflectType() {
@@ -33,6 +34,7 @@ var ClassRouterMeta = (function () {
     function ClassRouterMeta(target) {
         this.target = target;
         this.befores = [];
+        this.middlewares = [];
         this.subRouters = [];
         this._paths = [];
         this.params = new Map();
@@ -73,6 +75,14 @@ var ClassRouterParamMeta = (function () {
     return ClassRouterParamMeta;
 }());
 exports.ClassRouterParamMeta = ClassRouterParamMeta;
+var ClassRouterMiddlewareMeta = (function () {
+    function ClassRouterMiddlewareMeta(methodName, attachName) {
+        this.methodName = methodName;
+        this.attachName = attachName;
+    }
+    return ClassRouterMiddlewareMeta;
+}());
+exports.ClassRouterMiddlewareMeta = ClassRouterMiddlewareMeta;
 var ClassrouterValidationError = (function () {
     function ClassrouterValidationError(errors) {
         this.errors = errors;
@@ -80,6 +90,7 @@ var ClassrouterValidationError = (function () {
     return ClassrouterValidationError;
 }());
 exports.ClassrouterValidationError = ClassrouterValidationError;
+;
 var Map = (function () {
     function Map() {
         this.items = {};

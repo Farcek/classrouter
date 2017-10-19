@@ -11,6 +11,7 @@ export declare enum ParamLocation {
     Body = 2,
     Header = 3,
     Cookie = 4,
+    Request = 5,
 }
 export declare class ReflectType {
     static CLASSROUTER: string;
@@ -39,8 +40,10 @@ export declare class ClassRouterMeta {
     name: string;
     method: HttpMethod;
     viewName: string;
+    validationClass: IValidationErrorClass;
     params: Map<ClassRouterParamMeta>;
     befores: Function[];
+    middlewares: ClassRouterMiddlewareMeta[];
     subRouters: ClassType<IRoute>[];
     private _paths;
     constructor(target: any);
@@ -56,9 +59,26 @@ export declare class ClassRouterParamMeta {
     where: ParamLocation;
     typecast: ITypecastFn;
 }
+export declare class ClassRouterMiddlewareMeta {
+    methodName: string;
+    attachName: string;
+    constructor(methodName: string, attachName: string);
+}
 export declare class ClassrouterValidationError {
-    errors: any;
-    constructor(errors: any);
+    errors: IValidationResult[];
+    constructor(errors: IValidationResult[]);
+}
+export interface IValidationResult {
+    target: Object;
+    property: string;
+    value: any;
+    constraints?: {
+        [type: string]: string;
+    };
+    children?: IValidationResult[];
+}
+export interface IValidationErrorClass {
+    new (errors: IValidationResult[]): void;
 }
 export declare class Map<T> {
     private _size;

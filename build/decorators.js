@@ -39,6 +39,13 @@ function view(name) {
     };
 }
 exports.view = view;
+function validationClass(Clss) {
+    return function (target) {
+        var meta = common_1.ClassRouterMeta.getOrCreateClassRouterMeta(target);
+        meta.validationClass = Clss;
+    };
+}
+exports.validationClass = validationClass;
 function PATH() {
     var paths = [];
     for (var _i = 0; _i < arguments.length; _i++) {
@@ -61,6 +68,13 @@ function initParam(target, propertyKey, fieldname, location) {
     param.where = location;
     param.fieldname = fieldname || propertyKey;
 }
+function Middleware(attachName) {
+    return function (target, propertyKey) {
+        var meta = common_1.ClassRouterMeta.getOrCreateClassRouterMeta(target.constructor);
+        meta.middlewares.push(new common_1.ClassRouterMiddlewareMeta(propertyKey, attachName || propertyKey));
+    };
+}
+exports.Middleware = Middleware;
 function QueryParam(fieldname) {
     return function (target, propertyKey) { return initParam(target, propertyKey, fieldname, common_1.ParamLocation.Query); };
 }
@@ -69,6 +83,10 @@ function PathParam(fieldname) {
     return function (target, propertyKey) { return initParam(target, propertyKey, fieldname, common_1.ParamLocation.Path); };
 }
 exports.PathParam = PathParam;
+function ReqestParam(fieldname) {
+    return function (target, propertyKey) { return initParam(target, propertyKey, fieldname, common_1.ParamLocation.Request); };
+}
+exports.ReqestParam = ReqestParam;
 function BodyParam(fieldname) {
     return function (target, propertyKey) { return initParam(target, propertyKey, fieldname, common_1.ParamLocation.Body); };
 }
@@ -88,7 +106,7 @@ function SubRouter() {
     }
     return function (target) {
         var meta = common_1.ClassRouterMeta.getOrCreateClassRouterMeta(target);
-        meta.subRouters = subRouters;
+        meta.subRouters = meta.subRouters.concat(subRouters);
     };
 }
 exports.SubRouter = SubRouter;

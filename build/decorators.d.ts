@@ -1,13 +1,16 @@
-import { ClassType } from './common';
+import { ClassType, IValidationErrorClass } from './common';
 export declare function GET(target: Function): void;
 export declare function POST(target: Function): void;
 export declare function PUT(target: Function): void;
 export declare function DELETE(target: Function): void;
 export declare function before(...middlewares: Function[]): (target: Function) => void;
 export declare function view(name: string): (target: Function) => void;
+export declare function validationClass(Clss: IValidationErrorClass): (target: Function) => void;
 export declare function PATH(...paths: string[]): (target: any) => void;
+export declare function Middleware(attachName?: string): (target: any, propertyKey: string) => void;
 export declare function QueryParam(fieldname?: string): (target: any, propertyKey: string) => void;
 export declare function PathParam(fieldname?: string): (target: any, propertyKey: string) => void;
+export declare function ReqestParam(fieldname?: string): (target: any, propertyKey: string) => void;
 export declare function BodyParam(fieldname?: string): (target: any, propertyKey: string) => void;
 export declare function CookieParam(fieldname?: string): (target: any, propertyKey: string) => void;
 export declare function HeaderParam(fieldname?: string): (target: any, propertyKey: string) => void;

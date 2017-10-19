@@ -1,8 +1,8 @@
-import { ClassRouterMeta, HttpMethod, ParamLocation, ReflectType, ClassType, IRoute } from './common'
+import { ClassRouterMeta, HttpMethod, ParamLocation, ReflectType, ClassType, IValidationErrorClass, IRoute, ClassRouterMiddlewareMeta } from './common'
 
 function initMethod(target: Function, method: HttpMethod) {
     let meta = ClassRouterMeta.getOrCreateClassRouterMeta(target);
-    
+
     meta.method = method;
 }
 export function GET(target: Function) {
@@ -33,6 +33,12 @@ export function view(name: string) {
         meta.viewName = name;
     }
 }
+export function validationClass(Clss: IValidationErrorClass) {
+    return (target: Function) => {
+        let meta = ClassRouterMeta.getOrCreateClassRouterMeta(target);
+        meta.validationClass = Clss;
+    }
+}
 
 
 
@@ -53,12 +59,27 @@ function initParam(target, propertyKey: string, fieldname: string, location: Par
     param.where = location;
     param.fieldname = fieldname || propertyKey;
 }
+
+export function Middleware(attachName?: string) {
+    return (target, propertyKey: string) => {
+
+        let meta = ClassRouterMeta.getOrCreateClassRouterMeta(target.constructor);
+        
+        meta.middlewares.push(new ClassRouterMiddlewareMeta(
+            propertyKey, attachName || propertyKey
+        ));
+    }
+}
+
 export function QueryParam(fieldname?: string) {
     return (target, propertyKey: string) => initParam(target, propertyKey, fieldname, ParamLocation.Query)
 }
 
 export function PathParam(fieldname?: string) {
     return (target, propertyKey: string) => initParam(target, propertyKey, fieldname, ParamLocation.Path)
+}
+export function ReqestParam(fieldname?: string) {
+    return (target, propertyKey: string) => initParam(target, propertyKey, fieldname, ParamLocation.Request)
 }
 export function BodyParam(fieldname?: string) {
     return (target, propertyKey: string) => initParam(target, propertyKey, fieldname, ParamLocation.Body)
@@ -73,6 +94,7 @@ export function HeaderParam(fieldname?: string) {
 export function SubRouter(...subRouters: ClassType<any>[]) {
     return (target: Function) => {
         let meta = ClassRouterMeta.getOrCreateClassRouterMeta(target);
-        meta.subRouters = subRouters;
+
+        meta.subRouters = [...meta.subRouters, ...subRouters];
     }
 }

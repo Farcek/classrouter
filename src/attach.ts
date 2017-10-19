@@ -34,13 +34,18 @@ function resolveParam(req, routerParam: ClassRouterParamMeta) {
             paramValue.exists = true;
             paramValue.value = req.cookies[routerParam.fieldname]
         }
+    } else if (routerParam.where === ParamLocation.Request) {
+        if (routerParam.fieldname in req) {
+            paramValue.exists = true;
+            paramValue.value = req[routerParam.fieldname]
+        }
     }
 
     return paramValue;
 }
 
 export function attach(expressRouter: any, clss: { new (): IRoute | any }, parent?: string) {
-    let meta = ClassRouterMeta.getOrCreateClassRouterMeta(clss);    
+    let meta = ClassRouterMeta.getOrCreateClassRouterMeta(clss);
     let p = `${parent || ''}.${meta.name}`;
     if (meta.subRouters && meta.subRouters.length) {
         attachUse(meta, expressRouter, <{ new (): any }>clss, p);
@@ -51,9 +56,39 @@ export function attach(expressRouter: any, clss: { new (): IRoute | any }, paren
     return expressRouter;
 }
 
+function buildInstance<T>(meta: ClassRouterMeta, clss: { new (): T }, req: express.Request) {
+    let instance = new clss();
+
+    meta.params.each(paramMeta => {
+        let paramValue = resolveParam(req, paramMeta);
+        if (paramValue.exists) {
+            if (paramMeta.typecast) {
+                instance[paramMeta.propertyname] = paramMeta.typecast(paramValue, paramMeta);
+            } else {
+                instance[paramMeta.propertyname] = paramValue.value
+            }
+        }
+    });
+
+    return validate(instance)
+        .then(errors => {
+
+            if (errors.length > 0) {
+                if (meta.validationClass) {
+                    throw new meta.validationClass(errors)
+                }
+                throw new ClassrouterValidationError(errors);
+            }
+
+            return instance
+        })
+}
+
 function attachUse(meta: ClassRouterMeta, expressRouter: any, clss: { new (): any }, parent?: string) {
 
-    var router = express.Router();
+    var router = express.Router({
+
+    });
 
     meta.subRouters.map(route => {
         attach(router, route, parent)
@@ -64,7 +99,29 @@ function attachUse(meta: ClassRouterMeta, expressRouter: any, clss: { new (): an
         return fn();
     });
 
-    let handlers = [].concat(befores, [router]);
+    let middlewares = meta.middlewares.map(it => {
+        return (req, res, next) => {
+            buildInstance(meta, clss, req)
+                .then(instance => {
+                    if (it.methodName in instance) {
+                        let fn: Function = instance[it.methodName];
+
+                        let result = fn.call(instance, req, res);
+                        return Promise.resolve(result)
+                            .then(r => {
+                                req[it.attachName] = r;
+                                next();
+                            })
+                            .catch(err => next(err));
+                    }
+
+                    throw `not found method. method name : ${clss.name}.${it.methodName}.`
+                })
+                .catch(err => next(err));
+        }
+    })
+
+    let handlers = [...befores, ...middlewares, router];
 
     let jo = (path) => {
         expressRouter.use(path, handlers);
@@ -75,31 +132,9 @@ function attachUse(meta: ClassRouterMeta, expressRouter: any, clss: { new (): an
 
 function attachRoute(meta: ClassRouterMeta, expressRouter: any, clss: { new (): IRoute }, parent?: string) {
     let handler = (req, res, next) => {
-        let instance = new clss();
-
-        //
-
-
-        meta.params.each(paramMeta => {
-            let paramValue = resolveParam(req, paramMeta);
-            if (paramValue.exists) {
-                //console.log(paramMeta.propertyname, paramValue)
-
-                if (paramMeta.typecast) {
-                    instance[paramMeta.propertyname] = paramMeta.typecast(paramValue, paramMeta);
-                } else {
-                    instance[paramMeta.propertyname] = paramValue.value
-                }
-
-            }
-        });
-
-        validate(instance)
-            .then(errors => {
-                if (errors.length > 0) {
-                    throw new ClassrouterValidationError(errors);
-                }
-                return instance.action(req, res, next)
+        buildInstance(meta, clss, req)
+            .then(instance => {
+                return instance.action(req, res, next);
             })
             .then(result => {
                 if (result instanceof response.View) {
@@ -121,7 +156,29 @@ function attachRoute(meta: ClassRouterMeta, expressRouter: any, clss: { new (): 
         return fn();
     });
 
-    let handlers = [].concat(befores, [handler]);
+
+    let middlewares = meta.middlewares.map(it => {
+        return (req, res, next) => {
+            buildInstance(meta, clss, req)
+                .then(instance => {
+                    if (it.methodName in instance) {
+                        let fn: Function = instance[it.methodName];
+
+                        let result = fn.call(instance, req, res);
+                        return Promise.resolve(result)
+                            .then(r => {
+                                req[it.attachName] = r;
+                                next();
+                            })
+                            .catch(err => next(err));
+                    }
+                    throw `not found method. method name : ${clss.name}.${it.methodName}.   `
+                })
+                .catch(err => next(err));
+        }
+    })
+
+    let handlers = [...befores, ...middlewares, handler];
 
     let jo = (path) => {
         if (meta.method === HttpMethod.GET) {
