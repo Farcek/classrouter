@@ -1,11 +1,29 @@
-export class View{
-    constructor(public name:string, public data:any){
 
+export class Response {
+    contentType: string
+    statusCode: number 
+    headers: { [key: string]: string }
+
+}
+export class View extends Response {
+    constructor(public name: string, public data: any) {
+        super();
+        this.contentType = 'text/html';
     }
 }
 
-export class Redirect{
-    constructor(public uri:string, public code = 301){
-
+export class Redirect extends Response {
+    constructor(public uri: string, code = 301) {
+        super();
+        this.statusCode = code;
     }
 }
+
+export class Raw extends Response {
+
+    constructor(contentType: string, public body: string) {
+        super();
+        if (contentType) this.contentType = contentType;
+    }
+}
+

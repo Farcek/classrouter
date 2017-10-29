@@ -103,7 +103,7 @@ function attachUse(meta, expressRouter, clss, parent) {
                     })
                         .catch(function (err) { return next(err); });
                 }
-                throw "not found method. method name : " + clss.name + "." + it.methodName + ".   ";
+                throw "not found method. method name : " + clss.name + "." + it.methodName + ".";
             })
                 .catch(function (err) { return next(err); });
         };
@@ -121,14 +121,28 @@ function attachRoute(meta, expressRouter, clss, parent) {
             return instance.action(req, res, next);
         })
             .then(function (result) {
+            if (result instanceof response.Response) {
+                if (result.contentType)
+                    res.set('Content-Type', result.contentType);
+                if (result.statusCode)
+                    res.status(result.statusCode);
+                if (result.headers) {
+                    Object.keys(result.headers).map(function (key) {
+                        res.set(key, result.headers[key]);
+                    });
+                }
+            }
             if (result instanceof response.View) {
                 res.render(result.name, result.data);
             }
-            else if (result instanceof response.Redirect) {
-                res.redirect(result.code, result.uri);
-            }
             else if (meta.viewName) {
                 res.render(meta.viewName, result);
+            }
+            else if (result instanceof response.Redirect) {
+                res.redirect(result.statusCode, result.uri);
+            }
+            else if (result instanceof response.Raw) {
+                res.send(result.body);
             }
             else {
                 res.json(result);

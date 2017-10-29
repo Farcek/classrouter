@@ -137,12 +137,23 @@ function attachRoute(meta: ClassRouterMeta, expressRouter: any, clss: { new (): 
                 return instance.action(req, res, next);
             })
             .then(result => {
+                if (result instanceof response.Response) {
+                    if (result.contentType) res.set('Content-Type', result.contentType);
+                    if (result.statusCode) res.status(result.statusCode);
+                    if (result.headers) {
+                        Object.keys(result.headers).map(key => {
+                            res.set(key, result.headers[key]);
+                        });
+                    }
+                }
                 if (result instanceof response.View) {
                     res.render(result.name, result.data);
-                } else if (result instanceof response.Redirect) {
-                    res.redirect(result.code, result.uri);
                 } else if (meta.viewName) {
                     res.render(meta.viewName, result);
+                } else if (result instanceof response.Redirect) {
+                    res.redirect(result.statusCode, result.uri);
+                } else if (result instanceof response.Raw) {
+                    res.send(result.body);
                 } else {
                     res.json(result)
                 }
