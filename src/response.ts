@@ -27,3 +27,9 @@ export class Raw extends Response {
     }
 }
 
+export class File extends Response {
+
+    constructor(public filepath: string) {
+        super();        
+    }
+}

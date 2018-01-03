@@ -144,6 +144,9 @@ function attachRoute(meta, expressRouter, clss, parent) {
             else if (result instanceof response.Raw) {
                 res.send(result.body);
             }
+            else if (result instanceof response.File) {
+                res.sendFile(result.filepath);
+            }
             else {
                 res.json(result);
             }

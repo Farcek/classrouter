@@ -18,3 +18,7 @@ export declare class Raw extends Response {
     body: string;
     constructor(contentType: string, body: string);
 }
+export declare class File extends Response {
+    filepath: string;
+    constructor(filepath: string);
+}

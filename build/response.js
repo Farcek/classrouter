@@ -52,4 +52,14 @@ var Raw = (function (_super) {
     return Raw;
 }(Response));
 exports.Raw = Raw;
+var File = (function (_super) {
+    __extends(File, _super);
+    function File(filepath) {
+        var _this = _super.call(this) || this;
+        _this.filepath = filepath;
+        return _this;
+    }
+    return File;
+}(Response));
+exports.File = File;
 //# sourceMappingURL=response.js.map
